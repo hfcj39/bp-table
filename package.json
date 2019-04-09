@@ -4,9 +4,11 @@
   "private": false,
   "description": "vue table component based on iview",
   "author": "bingpo",
+  "license": "MIT",
+  "main": "dist/bptable.umd.js",
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "build": "vue-cli-service build --target lib --name bptable src/components/index.ts",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
@@ -26,5 +28,9 @@
     "typescript": "^3.2.1",
     "vue-cli-plugin-iview": "^1.0.6",
     "vue-template-compiler": "^2.5.21"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hfcj39/bp-table.git"
   }
 }
