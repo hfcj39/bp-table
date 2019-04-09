@@ -1,7 +1,9 @@
 {
   "name": "bp-table",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
+  "description": "vue table component based on iview",
+  "author": "bingpo",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
