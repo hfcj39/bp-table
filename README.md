@@ -1,6 +1,6 @@
 # bp-table
-基于iview开发的表格组件
-
+基于iview开发的表格组件[WIP]
+todo:单元格中组件、远程搜索以及分页。。。
 ## 用法
 
 ```javascript
