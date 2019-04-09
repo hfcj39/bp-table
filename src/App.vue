@@ -1,36 +1,113 @@
 <template>
-  <div id="app">
-    <img src="./assets/logo.png">
-    <div>
-      <p>
-        If iView is successfully added to this project, you'll see an
-        <code v-text="'<Button>'"></code>
-        below
-      </p>
-      <Button type="primary">Button</Button>
+    <div id="app">
+        <bptable :option="option" :selectedList.sync="selectedList" :list="list" :column="column"
+                 :data="data">
+        </bptable>
     </div>
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
 </template>
 
-<script>
-import HelloWorld from './components/HelloWorld.vue'
+<script lang="ts">
+    import {Vue, Component} from 'vue-property-decorator';
+    import {ListOption} from '@/components/interface';
 
-export default {
-  name: 'app',
-  components: {
-    HelloWorld
-  }
-}
+    // todo 多选
+
+    @Component
+    export default class App extends Vue {
+        private option: ListOption<any> = {
+            rowKey: 'id',
+            pageSizes: [10, 20, 50, 100, 200],
+            exportExcel: true,
+            stripe: true,
+            border: true,
+            showColumnFilter: true,
+            action: true,
+        };
+        private selectedList = [];
+        private list = [];
+        private column = [
+            {
+                title: 'Name',
+                key: 'name',
+                filter: {
+                    type: 'Input',
+                    stype: 'text',
+                    placeholder: '请输入姓名',
+                },
+            },
+            {
+                title: 'Age',
+                key: 'age',
+                filter: {
+                    type: 'Input',
+                    stype: 'text',
+                    placeholder: '请输入年龄',
+                },
+            },
+            {
+                title: 'Address',
+                key: 'address',
+            },
+            {
+                title: 'Action',
+                key: 'action',
+                width: 150,
+                align: 'center',
+                render: (h: any, params: any) => {
+                    return h('div', [
+                        h('Button', {
+                            props: {
+                                type: 'primary',
+                                size: 'small',
+                            },
+                            style: {
+                                marginRight: '5px',
+                            },
+                            on: {
+                                click: () => {
+                                    this.show(params);
+                                },
+                            },
+                        }, 'View'),
+                    ]);
+                },
+            },
+        ];
+        private data = [
+            {
+                name: 'John Brown',
+                age: 18,
+                address: 'New York No. 1 Lake Park',
+                date: '2016-10-03',
+            },
+            {
+                name: 'Jim Green',
+                age: 24,
+                address: 'London No. 1 Lake Park',
+                date: '2016-10-01',
+            },
+            {
+                name: 'Joe Black',
+                age: 30,
+                address: 'Sydney No. 1 Lake Park',
+                date: '2016-10-02',
+            },
+            {
+                name: 'Jon Snow',
+                age: 26,
+                address: 'Ottawa No. 2 Lake Park',
+                date: '2016-10-04',
+            },
+        ];
+
+        private show(index: number) {
+            console.log(index);
+        }
+    }
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+    #app {
+        margin: 20px;
+    }
 </style>
