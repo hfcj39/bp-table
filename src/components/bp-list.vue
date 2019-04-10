@@ -64,7 +64,7 @@
 
 <script lang="ts">
 
-    import {Vue, Component, Prop, Emit} from 'vue-property-decorator';
+    import {Vue, Component, Prop, Emit, Watch} from 'vue-property-decorator';
     import {ListOption} from './interface';
 
     @Component
@@ -87,8 +87,14 @@
         private total: number = this.fullData.length;
         private current: number = 1;
         private selectedSize: number = this.option.pageSizes![0];
+        private columnSearchPayload: { [key: string]: any } = {};
 
-        public created() {
+        @Watch('data', {immediate: true, deep: true})
+        private onDataChanged(val: any) {
+            this.handleData(val);
+        }
+
+        private created() {
             this.renderColumnSearch();
             this.handleData(this.data);
         }
@@ -123,20 +129,35 @@
 
         private exportData(opt: any) {
             console.log('export', opt);
-            const el: any = this.$refs.table;
-            if (opt === 'origin') {
-                el.exportCsv({
-                    filename: 'The original data',
+            this.isLoading = true;
+            try {
+                const el: any = this.$refs.table;
+                if (opt === 'origin') {
+                    el.exportCsv({
+                        filename: 'The original data',
+                    });
+                } else if (opt === 'current') {
+                    el.exportCsv({
+                        filename: 'Sorting and filtering data',
+                        data: this.showedData,
+                    });
+                }
+                this.$Notice.success({
+                    title: '开始下载...',
                 });
-            } else if (opt === 'current') {
-                el.exportCsv({
-                    filename: 'Sorting and filtering data',
-                    data: this.showedData,
+            } catch (e) {
+                console.log(e);
+                this.$Notice.error({
+                    title: '发生错误...',
                 });
+            } finally {
+                this.isLoading = false;
             }
+
         }
 
         private renderColumnSearch() {
+            this.isLoading = true;
             for (const item of this.column) {
                 if (item.filter) {
                     item.children = [];
@@ -184,6 +205,7 @@
 
                 }
             }
+            this.isLoading = false;
             console.log('column', this.column);
         }
 
@@ -196,17 +218,17 @@
         }
 
         private handleColumnSearch(val: string, column: any) {
-            this.isLoading = true;
-            if (val === '') {
-                this.tempData = this.fullData;
-                this.isLoading = false;
-                return this.handleData(this.tempData);
-            }
+            // console.log(val, column);
+            this.columnSearchPayload[column.key] = val;
             this.tempData = this.fullData.filter((row: any) => {
-                // console.log("row", row);
-                const content = row[column.key];
-                // console.log("content", content);
-                return content.toString().indexOf(val) >= 0;
+                for (const key in this.columnSearchPayload) {
+                    if (this.columnSearchPayload.hasOwnProperty(key)) {
+                        if (row[key].toString().indexOf(this.columnSearchPayload[key]) < 0) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
             });
             this.handleData(this.tempData);
             this.isLoading = false;
@@ -229,12 +251,15 @@
         }
 
         private handleData(data: any[]) {
+            this.isLoading = true;
             this.initPagetotal(data);
             if (data.length <= this.selectedSize) {
+                this.isLoading = false;
                 return this.showedData = data;
             }
             this.showedData = data.slice((this.current - 1) * this.selectedSize, this.current * this.selectedSize);
             console.log('total', this.total);
+            this.isLoading = false;
         }
 
         @Emit()

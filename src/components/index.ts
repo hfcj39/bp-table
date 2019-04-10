@@ -10,6 +10,7 @@ import {
     CheckboxGroup,
     Checkbox,
     Page,
+    Notice,
 } from 'iview';
 
 declare module 'iview/types/button' {
@@ -36,6 +37,9 @@ declare module 'iview/types/checkbox' {
 declare module 'iview/types/page' {
     export const Page: Page;
 }
+declare module 'iview/types/notice' {
+    export const Notice: Notice;
+}
 
 import 'iview/dist/styles/iview.css';
 
@@ -52,6 +56,7 @@ const List = {
         Vue.component('Checkbox', Checkbox);
         Vue.component('Icon', Icon);
         Vue.component('Page', Page);
+        Vue.prototype.$Notice = Notice;
     },
 };
 
