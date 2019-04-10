@@ -1,7 +1,10 @@
 <template>
     <div id="app">
-        <bptable :option="option" :selectedList.sync="selectedList" :list="list" :column="column"
-                 :data="data">
+        <bptable :option="option"
+                 :column="column"
+                 :data="data"
+                 @on-selection-change="selectionChange"
+        >
         </bptable>
     </div>
 </template>
@@ -23,9 +26,13 @@
             showColumnFilter: true,
             action: true,
         };
-        private selectedList = [];
-        private list = [];
         private column = [
+            {
+                title: '多选',
+                type: 'selection',
+                width: 60,
+                align: 'center',
+            },
             {
                 title: 'Name',
                 key: 'name',
@@ -102,6 +109,10 @@
 
         private show(index: number) {
             console.log(index);
+        }
+
+        private selectionChange(arr: any[]) {
+            console.log(arr);
         }
     }
 </script>

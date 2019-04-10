@@ -44,6 +44,7 @@
                :stripe="option.stripe"
                :border="option.border"
                :loading="isLoading"
+               @on-selection-change="onSelectionChange"
                ref="table"
         ></Table>
         <!--分页组件-->
@@ -63,7 +64,7 @@
 
 <script lang="ts">
 
-    import {Vue, Component, Prop} from 'vue-property-decorator';
+    import {Vue, Component, Prop, Emit} from 'vue-property-decorator';
     import {ListOption} from './interface';
 
     @Component
@@ -158,17 +159,32 @@
                         },
                     });
                 } else if (!item.render) {
-                    console.log(item.key);
+                    // console.log(item.key);
                     item.children = [];
-                    item.children.push({
-                        key: item.key,
-                        renderHeader: (h: any) => {
-                            return h('div');
-                        },
-                    });
-                }
+                    if (item.type === 'selection') {
+                        delete item.type;
+                        item.children.push({
+                            type: 'selection',
+                            width: item.width,
+                            align: 'center',
+                            renderHeader: (h: any) => {
+                                return h('div');
+                            },
+                        })
+                        ;
+                    } else {
+                        item.children.push({
+                            key: item.key,
+                            width: item.width,
+                            renderHeader: (h: any) => {
+                                return h('div');
+                            },
+                        });
+                    }
 
+                }
             }
+            console.log('column', this.column);
         }
 
         private fillTableColumns() {
@@ -219,6 +235,11 @@
             }
             this.showedData = data.slice((this.current - 1) * this.selectedSize, this.current * this.selectedSize);
             console.log('total', this.total);
+        }
+
+        @Emit()
+        private onSelectionChange(selection: any[]) {
+            return selection;
         }
     }
 </script>
