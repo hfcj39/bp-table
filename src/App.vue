@@ -3,8 +3,14 @@
         <bptable :option="option"
                  :column="column"
                  :data="data"
+                 :pageParams="page"
                  @on-selection-change="selectionChange"
+                 @on-global-search="globalSearch"
+                 @on-export-data="exportData"
+                 @on-column-search="columnSearch"
+                 @on-page-change="pageChange"
         >
+            <p>这里是插槽内容</p>
         </bptable>
     </div>
 </template>
@@ -19,12 +25,12 @@
     export default class App extends Vue {
         private option: ListOption<any> = {
             rowKey: 'id',
+            sync: true,
             pageSizes: [10, 20, 50, 100, 200],
             exportExcel: true,
             stripe: true,
             border: true,
             showColumnFilter: true,
-            action: true,
         };
         private column = [
             {
@@ -106,6 +112,10 @@
                 date: '2016-10-04',
             },
         ];
+        private page = {
+            total: 100,
+            currentPage: 1,
+        };
 
         private show(index: number) {
             console.log(index);
@@ -113,6 +123,22 @@
 
         private selectionChange(arr: any[]) {
             console.log(arr);
+        }
+
+        private globalSearch(payload: string) {
+            console.log('searchGlobal', payload);
+        }
+
+        private exportData(opt: string) {
+            console.log('export', opt);
+        }
+
+        private columnSearch(obj: any) {
+            console.log('columnSearch', obj);
+        }
+
+        private pageChange(obj: any) {
+            console.log('changePage', obj);
         }
     }
 </script>

@@ -3,11 +3,8 @@
         <div class="table-header">
             <!--全局搜索组件-->
             <Input search placeholder="请输入要搜索的内容" @on-search="handleGlobalSearch"/>
-            <!--统计多选-->
-            <span
-                    v-if="mySelectedList.length>0 && option.checkbox"
-                    style="margin-left:15px"
-            >已选中 {{mySelectedList.length}}/{{list.length}}</span>
+            <!--插槽-->
+            <slot></slot>
             <!--导出组件-->
             <div v-if="option.exportExcel">
                 <Dropdown @on-click="exportData" style="margin-left: 20px">
@@ -65,20 +62,19 @@
 <script lang="ts">
 
     import {Vue, Component, Prop, Emit, Watch} from 'vue-property-decorator';
-    import {ListOption} from './interface';
+    import {ListOption, PageParams} from './interface';
 
     @Component
     export default class BpList extends Vue {
 
         @Prop({required: true, type: Object}) private option!: ListOption<any>;
-        @Prop({type: Array}) private selectedList!: any[];
+        @Prop({type: Object}) private pageParams!: PageParams;
         @Prop({type: Array}) private column!: any[];
         @Prop({type: Array}) private data!: any[];
 
         private tableColumnsChecked = this.column.map((item: any) => {
             return item.key;
         });
-        private mySelectedList = this.selectedList || [];
         private filteredColumns = this.column;
         private isLoading: boolean = false;
         private showedData: any[] = this.data;
@@ -100,8 +96,11 @@
         }
 
         private handleGlobalSearch(text: string) {
+            if (this.option.sync) {
+                return this.onGlobalSearch(text);
+            }
             this.isLoading = true;
-            console.log('GlobalSearch', text);
+            // console.log('GlobalSearch', text);
             if (text === '') {
                 this.tempData = this.fullData;
                 this.isLoading = false;
@@ -127,8 +126,11 @@
             this.isLoading = false;
         }
 
-        private exportData(opt: any) {
-            console.log('export', opt);
+        private exportData(opt: string) {
+            if (this.option.sync) {
+                return this.onExportData(opt);
+            }
+            // console.log('export', opt);
             this.isLoading = true;
             try {
                 const el: any = this.$refs.table;
@@ -206,7 +208,7 @@
                 }
             }
             this.isLoading = false;
-            console.log('column', this.column);
+            // console.log('column', this.column);
         }
 
         private fillTableColumns() {
@@ -220,6 +222,10 @@
         private handleColumnSearch(val: string, column: any) {
             // console.log(val, column);
             this.columnSearchPayload[column.key] = val;
+            if (this.option.sync) {
+                return this.onColumnSearch(this.columnSearchPayload);
+            }
+            this.isLoading = true;
             this.tempData = this.fullData.filter((row: any) => {
                 for (const key in this.columnSearchPayload) {
                     if (this.columnSearchPayload.hasOwnProperty(key)) {
@@ -235,36 +241,70 @@
         }
 
         private handlePageChange(index: number) {
-            console.log('page', index);
+            // console.log('page', index);
             this.current = index;
+            if (this.option.sync) {
+                return this.onPageChange(this.current, this.selectedSize);
+            }
             this.handleData(this.tempData);
         }
 
         private handlePageSizeChange(size: number) {
-            console.log('size', size);
+            // console.log('size', size);
             this.selectedSize = size;
+            if (this.option.sync) {
+                return this.onPageChange(this.current, this.selectedSize);
+            }
             this.handleData(this.tempData);
         }
 
         private initPagetotal(data: any[]) {
-            this.total = data.length;
+            if (this.option.sync) {
+                this.total = this.pageParams.total || 0;
+            } else {
+                this.total = data.length;
+            }
         }
 
+        // 处理并且渲染数据
         private handleData(data: any[]) {
-            this.isLoading = true;
             this.initPagetotal(data);
+            if (this.option.sync) {
+                return this.showedData = this.data;
+            }
+            this.isLoading = true;
             if (data.length <= this.selectedSize) {
                 this.isLoading = false;
                 return this.showedData = data;
             }
             this.showedData = data.slice((this.current - 1) * this.selectedSize, this.current * this.selectedSize);
-            console.log('total', this.total);
+            // console.log('total', this.total);
             this.isLoading = false;
         }
 
         @Emit()
         private onSelectionChange(selection: any[]) {
             return selection;
+        }
+
+        @Emit()
+        private onGlobalSearch(payload: string) {
+            return payload;
+        }
+
+        @Emit()
+        private onExportData(opt: string) {
+            return opt;
+        }
+
+        @Emit()
+        private onColumnSearch(payload: any) {
+            return payload;
+        }
+
+        @Emit()
+        private onPageChange(pageNumber: number, pageSize: number) {
+            return {pageNumber, pageSize};
         }
     }
 </script>

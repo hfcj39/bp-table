@@ -1,6 +1,6 @@
 # bp-table
 基于iview开发的表格组件[WIP]
-todo:单元格中组件、远程搜索以及分页。。。
+todo:单元格中组件等。。。
 ## 用法
 
 ```javascript
@@ -11,20 +11,23 @@ Vue.use(BpTable);
 ```vue
 <template>
     <div id="app">
-        <bptable :option="option" :list="list" :column="column" :data="data">
+        <bptable :option="option" :column="column" :data="data" :pageParams="pageParams">
         </bptable>
+        <!--当option中sync参数为true时，需要在传入data同时传入分页参数-->
     </div>
 </template>
 <script lang="ts">
 // ...
 </script>
 ```
+option结构：
 ```typescript
 export interface ListOption<T> {
     rowKey: string; // 唯一键
+    sync:boolean; // false：本地搜索加分页；true：远程搜索加分页（会返回事件）
     showColumnFilter?: boolean;
     action?: boolean;
-    pageSize?: number; // 每页显示数量L
+    pageSize?: number; // 每页显示数量
     pageSizes?: number[]; // 每页显示数量选项
     exportExcel?: boolean; // 是否显示导出按钮
     disablePagination?: boolean; // 显示分页
