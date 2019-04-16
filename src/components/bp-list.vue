@@ -87,6 +87,8 @@
 
         @Watch('data', {immediate: true, deep: true})
         private onDataChanged(val: any) {
+            this.fullData = val;
+            this.tempData = val;
             this.handleData(val);
         }
 
