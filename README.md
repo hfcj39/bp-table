@@ -2,9 +2,11 @@
 基于iview开发的表格组件[WIP]
 todo:单元格中组件等。。。  
 
-![version](https://img.shields.io/badge/version-v0.2.0-brightgreen.svg?style=flat-square)
+![version](https://img.shields.io/badge/version-v0.3.0-brightgreen.svg?style=flat-square)
 [![MIT](https://img.shields.io/dub/l/vibe-d.svg?style=flat-square)](http://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://reactjs.org/docs/how-to-contribute.html#your-first-pull-request)
+
+![](preview.png)
 
 ## 用法
 
@@ -97,4 +99,3 @@ npm run serve
 ```
 npm run build
 ```
-

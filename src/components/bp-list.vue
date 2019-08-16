@@ -84,6 +84,7 @@
         private current: number = 1;
         private selectedSize: number = this.option.pageSizes![0];
         private columnSearchPayload: { [key: string]: any } = {};
+        private timer: any;
 
         @Watch('data', {immediate: true, deep: true})
         private onDataChanged(val: any) {
@@ -92,8 +93,26 @@
             this.handleData(val);
         }
 
+        @Watch('column', {immediate: true, deep: true})
+        private onColumnChanged(val: any[]) {
+            this.filteredColumns = val;
+            this.tableColumnsChecked = this.column.map((item: any) => {
+                return item.key;
+            });
+        }
+
+        @Watch('pageParams', {deep: true})
+        private onPageParamsChange(val: { total: number, currentPage: number }) {
+            if (this.option.sync) {
+                this.total = val.total || 0;
+                this.current = val.currentPage || 1;
+            }
+        }
+
         private created() {
-            this.renderColumnSearch();
+            if (this.columnHasFilter()) {
+                this.renderColumnSearch();
+            }
             this.handleData(this.data);
         }
 
@@ -160,57 +179,91 @@
 
         }
 
+        private columnHasFilter() {
+            for (const item of this.column) {
+                if (item.filter) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private renderColumnSearch() {
             this.isLoading = true;
             for (const item of this.column) {
+                let childColumn = {...item};
+                delete childColumn.filter;
+                let children = [];
+                let inputValue: string = '';
+                let renderHeader = (h: any) => {
+                };
                 if (item.filter) {
-                    item.children = [];
-                    item.children.push({
-                        key: item.key,
-                        renderHeader: (h: any) => {
-                            const inputValue = {};
-                            return h(item.filter.type, {
+                    if (item.filter.type === 'select') {
+                        renderHeader = (h: any) => {
+                            return h('Select', {
                                 props: {
-                                    type: item.filter.stype || 'text',
-                                    placeholder: item.filter.placeholder || '输入搜索内容',
-                                    size: 'default',
+                                    clearable: true,
+                                    value: null,
+                                    placeholder: item.filter.placeholder || '请选择搜索选项',
+                                    size: item.filter.size || 'default',
+                                    transfer: true,
+                                },
+                                style: {
+                                    width: item.filter.width || null,
                                 },
                                 on: {
-                                    input: (val: any) => {
+                                    'on-change': (val: string) => {
+                                        if (val === undefined) {
+                                            val = '';
+                                        }
                                         this.handleColumnSearch(val, item);
-                                    },
+                                    }
+                                }
+                            }, this.renderSelectOption(item.filter, h));
+                        };
+                    } else if (item.filter.type === 'Input') {
+                        renderHeader = (h: any) => {
+                            return h('Input', {
+                                props: {
+                                    type: item.filter.stype || 'text',
+                                    placeholder: item.filter.placeholder || '请输入搜索内容',
+                                    size: item.filter.size || null,
                                 },
+                                style: {
+                                    width: item.filter.width || null,
+                                },
+                                on: {
+                                    'input': (val: string) => {
+                                        inputValue = val;
+                                        this.handleColumnSearch(val, item);
+                                    }
+                                }
                             });
-                        },
-                    });
-                } else if (!item.render) {
-                    // console.log(item.key);
-                    item.children = [];
-                    if (item.type === 'selection') {
-                        delete item.type;
-                        item.children.push({
-                            type: 'selection',
-                            width: item.width,
-                            align: 'center',
-                            renderHeader: (h: any) => {
-                                return h('div');
-                            },
-                        })
-                        ;
-                    } else {
-                        item.children.push({
-                            key: item.key,
-                            width: item.width,
-                            renderHeader: (h: any) => {
-                                return h('div');
-                            },
-                        });
+                        };
                     }
 
+                    this.$set(childColumn, 'renderHeader', renderHeader);
+                    children.push(childColumn);
+                    this.$set(item, 'children', children);
                 }
             }
             this.isLoading = false;
             // console.log('column', this.column);
+        }
+
+        private renderSelectOption(col, h) {
+            let optionRender = [];
+            if (col.option) {
+                const option = col.option;
+                for (let i in option) {
+                    optionRender.push(h('Option', {
+                        props: {
+                            value: option[i].value
+                        }
+                    }, option[i].name));
+                }
+            }
+            return optionRender;
         }
 
         private fillTableColumns() {
@@ -223,23 +276,26 @@
 
         private handleColumnSearch(val: string, column: any) {
             // console.log(val, column);
-            this.columnSearchPayload[column.key] = val;
-            if (this.option.sync) {
-                return this.onColumnSearch(this.columnSearchPayload);
-            }
-            this.isLoading = true;
-            this.tempData = this.fullData.filter((row: any) => {
-                for (const key in this.columnSearchPayload) {
-                    if (this.columnSearchPayload.hasOwnProperty(key)) {
-                        if (row[key].toString().indexOf(this.columnSearchPayload[key]) < 0) {
-                            return false;
+            clearTimeout(this.timer);
+            this.timer = setTimeout(() => {
+                this.columnSearchPayload[column.key] = val.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+                if (this.option.sync) {
+                    return this.onColumnSearch(this.columnSearchPayload);
+                }
+                this.isLoading = true;
+                this.tempData = this.fullData.filter((row: any) => {
+                    for (const key in this.columnSearchPayload) {
+                        if (this.columnSearchPayload.hasOwnProperty(key)) {
+                            if (row[key].toString().toUpperCase().indexOf(this.columnSearchPayload[key]) < 0) {
+                                return false;
+                            }
                         }
                     }
-                }
-                return true;
-            });
-            this.handleData(this.tempData);
-            this.isLoading = false;
+                    return true;
+                });
+                this.handleData(this.tempData);
+                this.isLoading = false;
+            }, 700);
         }
 
         private handlePageChange(index: number) {
